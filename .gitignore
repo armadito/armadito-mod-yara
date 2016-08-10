@@ -16,3 +16,8 @@ Makefile.in
 /install-sh
 /missing
 /stamp-h1
+/config.guess
+/config.sub
+/ltmain.sh
+
+*~
