@@ -22,8 +22,16 @@ along with Armadito module YARA.  If not, see <http://www.gnu.org/licenses/>.
 #include <libarmadito.h>
 #include <yara.h>
 
+/*
+  (FD 2016/08/11) for now, we handle only one compiled rules file and do not compile the rules inside the module.
+  Later, we may add rule compiling in module post_init and saving the compiled file, but there are some issues:
+  * is compilation incremental? it seems that yes
+  * can we mix compiled and non compiled rules?
+ */
+
 struct yara_data {
-	YR_COMPILER *compiler;
+	const char *rule_file;
+	YR_RULES *rules;
 };
 
 static enum a6o_mod_status yara_init(struct a6o_module *module)
@@ -36,43 +44,103 @@ static enum a6o_mod_status yara_init(struct a6o_module *module)
 		return ARMADITO_MOD_INIT_ERROR;
 	}
 
-	yr_data->compiler = NULL;
-
-	if ((ret = yr_compiler_create(&yr_data->compiler)) != ERROR_SUCCESS) {
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_ERROR, "YARA compiler creation failed: %s", ret);
-		return ARMADITO_MOD_INIT_ERROR;
-	}
-
 	yr_data = malloc(sizeof(struct yara_data));
 	module->data = yr_data;
+
+	yr_data->rule_file = NULL;
+	yr_data->rules = NULL;
 
 	return ARMADITO_MOD_OK;
 }
 
-static enum a6o_mod_status yara_conf_set_dbdir(struct a6o_module *module, const char *key, struct a6o_conf_value *value)
+static enum a6o_mod_status yara_conf_set_rule_file(struct a6o_module *module, const char *key, struct a6o_conf_value *value)
 {
 	struct yara_data *yr_data = (struct yara_data *)module->data;
 
+	yr_data->rule_file = strdup(a6o_conf_value_get_string(value));
+
 	return ARMADITO_MOD_OK;
+}
+
+static size_t yara_count_rules(YR_RULES *rules)
+{
+	YR_RULE *rule;
+	size_t count = 0;
+
+	/* rules is a YR_RULES object */
+	yr_rules_foreach(rules, rule)
+	{
+		count++;
+	}
+
+	return count;
 }
 
 static enum a6o_mod_status yara_post_init(struct a6o_module *module)
 {
 	struct yara_data *yr_data = (struct yara_data *)module->data;
+	int ret;
+
+	if ((ret = yr_rules_load(yr_data->rule_file, &yr_data->rules)) != ERROR_SUCCESS) {
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_ERROR, "YARA rules load failed: %d", ret);
+		return ARMADITO_MOD_INIT_ERROR;
+	}
+
+	a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_INFO, "YARA rules loaded from %s, %d rules",
+		yr_data->rule_file, yara_count_rules(yr_data->rules));
 
 	return ARMADITO_MOD_OK;
+}
+
+struct yara_scan_data {
+	enum a6o_file_status status;
+	char *report;
+};
+
+static int yara_scan_callback(int message, void *message_data, void* user_data)
+{
+	struct yara_scan_data *scan_data = (struct yara_scan_data *)user_data;
+	YR_RULE *rule = (YR_RULE *)message_data;
+
+	switch(message) {
+	case CALLBACK_MSG_RULE_MATCHING:
+		scan_data->status = ARMADITO_MALWARE;
+		scan_data->report = strdup(rule->identifier);
+		return CALLBACK_CONTINUE;
+	case CALLBACK_MSG_RULE_NOT_MATCHING:
+		return CALLBACK_CONTINUE;
+	}
+
+	return CALLBACK_ERROR;
 }
 
 static enum a6o_file_status yara_scan(struct a6o_module *module, int fd, const char *path, const char *mime_type, char **pmod_report)
 {
 	struct yara_data *yr_data = (struct yara_data *)module->data;
+	struct yara_scan_data scan_data;
+	int ret;
+	int flags = 0;
 
-	return ARMADITO_CLEAN;
+	flags |= SCAN_FLAGS_FAST_MODE;
+
+	scan_data.status = ARMADITO_CLEAN;
+	scan_data.report = NULL;
+
+	/* ret = yr_rules_scan_fd(yr_data->rules, (YR_FILE_DESCRIPTOR)fd, 0, yara_scan_callback, &scan_data, 1000000); */
+	ret = yr_rules_scan_file(yr_data->rules, path, flags, yara_scan_callback, &scan_data, 1000000);
+
+	if (scan_data.report != NULL)
+		*pmod_report = scan_data.report;
+
+	return scan_data.status;
 }
 
 static enum a6o_mod_status yara_close(struct a6o_module *module)
 {
 	struct yara_data *yr_data = (struct yara_data *)module->data;
+
+	if (yr_data->rules != NULL)
+		yr_rules_destroy(yr_data->rules);
 
 	return ARMADITO_MOD_OK;
 }
@@ -83,7 +151,7 @@ static enum a6o_update_status yara_info(struct a6o_module *module, struct a6o_mo
 }
 
 static struct a6o_conf_entry yara_conf_table[] = {
-	{ "dbdir", CONF_TYPE_STRING, yara_conf_set_dbdir},
+	{ "rule_file", CONF_TYPE_STRING, yara_conf_set_rule_file},
 	{ NULL, CONF_TYPE_VOID, NULL},
 };
 
