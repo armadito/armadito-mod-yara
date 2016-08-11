@@ -1,0 +1,9 @@
+#
+# Armadito YARA scan module configuration
+#
+[yara]
+
+# rules file
+# for now, we handle only one compiled rules file and do not compile the rules inside the module.
+rule_file="@localstatedir@/lib/armadito/bases/yara/out.yarc"
+
