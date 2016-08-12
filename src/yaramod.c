@@ -40,7 +40,7 @@ static enum a6o_mod_status yara_init(struct a6o_module *module)
 	int ret;
 
 	if ((ret = yr_initialize()) != ERROR_SUCCESS) {
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_ERROR, "YARA initialization failed: %d", ret);
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA initialization failed: %d", ret);
 		return ARMADITO_MOD_INIT_ERROR;
 	}
 
@@ -82,7 +82,7 @@ static enum a6o_mod_status yara_post_init(struct a6o_module *module)
 	int ret;
 
 	if ((ret = yr_rules_load(yr_data->rule_file, &yr_data->rules)) != ERROR_SUCCESS) {
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_ERROR, "YARA rules load failed: %d", ret);
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA rules load failed: %d", ret);
 		return ARMADITO_MOD_INIT_ERROR;
 	}
 
