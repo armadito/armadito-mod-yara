@@ -128,7 +128,7 @@ static enum a6o_file_status yara_scan(struct a6o_module *module, int fd, const c
 
 // File descriptor scan support in Yara is correct for us since 3.5.0
 #if YR_MAJOR_VERSION > 3 || (YR_MAJOR_VERSION == 3 && YR_MINOR_VERSION >= 5)
-	ret = yr_rules_scan_fd(yr_data->rules, (YR_FILE_DESCRIPTOR)fd, 0, yara_scan_callback, &scan_data, 1000000);
+	ret = yr_rules_scan_fd(yr_data->rules, (YR_FILE_DESCRIPTOR)fd, flags, yara_scan_callback, &scan_data, 1000000);
 #else
 	ret = yr_rules_scan_file(yr_data->rules, path, flags, yara_scan_callback, &scan_data, 1000000);
 #endif
