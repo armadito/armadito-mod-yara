@@ -82,7 +82,26 @@ static enum a6o_mod_status yara_post_init(struct a6o_module *module)
 	int ret;
 
 	if ((ret = yr_rules_load(yr_data->rule_file, &yr_data->rules)) != ERROR_SUCCESS) {
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA rules load failed: %d", ret);
+		const char *error = "Unsupported error code";
+		switch (ret) {
+		case ERROR_INSUFICIENT_MEMORY:
+			error = "Insufficient memory";
+			break;
+		case ERROR_COULD_NOT_OPEN_FILE:
+			error = "Can't open rule file";
+			break;
+		case ERROR_INVALID_FILE:
+			error = "Can't read invalid rule file";
+			break;
+		case ERROR_CORRUPT_FILE:
+			error = "Found corrupted rule file";
+			break;
+		case ERROR_UNSUPPORTED_FILE_VERSION:
+			error = "Unsupported rule file version";
+			break;
+		}
+
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA rules load from %s failed: %s", yr_data->rule_file, error);
 		return ARMADITO_MOD_INIT_ERROR;
 	}
 
@@ -109,6 +128,16 @@ static int yara_scan_callback(int message, void *message_data, void* user_data)
 		return CALLBACK_CONTINUE;
 	case CALLBACK_MSG_RULE_NOT_MATCHING:
 		return CALLBACK_CONTINUE;
+	case CALLBACK_MSG_SCAN_FINISHED:
+		return CALLBACK_CONTINUE;
+	case CALLBACK_MSG_IMPORT_MODULE:
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_DEBUG, "YARA needs to import %s module",
+			((YR_MODULE_IMPORT *)message_data)->module_name);
+		return CALLBACK_CONTINUE;
+	case CALLBACK_MSG_MODULE_IMPORTED:
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_INFO, "YARA imported %s module",
+			((YR_OBJECT *)message_data)->identifier);
+		return CALLBACK_CONTINUE;
 	}
 
 	return CALLBACK_ERROR;
@@ -132,6 +161,32 @@ static enum a6o_file_status yara_scan(struct a6o_module *module, int fd, const c
 #else
 	ret = yr_rules_scan_file(yr_data->rules, path, flags, yara_scan_callback, &scan_data, 1000000);
 #endif
+
+	if (ret != ERROR_SUCCESS) {
+		const char *error = "Unsupported return code";
+		switch (ret) {
+		case ERROR_INSUFICIENT_MEMORY:
+			error = "YARA needs more memory";
+			break;
+		case ERROR_COULD_NOT_MAP_FILE:
+			error = "YARA can't map file in memory";
+			break;
+		case ERROR_SCAN_TIMEOUT:
+			error = "YARA scan timeout";
+			break;
+		case ERROR_TOO_MANY_SCAN_THREADS:
+			error = "Too many YARA threads, this is probably a bug. Please report it to Armadito team";
+			break;
+		case ERROR_CALLBACK_ERROR:
+			error = "Armadito scan callback issue, this is probably a bug. Please report it to Armadito team";
+			break;
+		case ERROR_TOO_MANY_MATCHES:
+			error = "YARA reports too many matches, this is probably a bug. Please report it to Armadito team";
+			break;
+		}
+
+		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "Scan failure on %s ! %s", path, error);
+	}
 
 	if (scan_data.report != NULL)
 		*pmod_report = scan_data.report;
