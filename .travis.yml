@@ -1,0 +1,48 @@
+language: C
+sudo: required
+dist: trusty
+
+addons:
+  apt:
+    packages:
+    - libtool
+    - libglib2.0-dev
+    - libmagic-dev
+    - libxml2-dev
+    - libjson-c-dev
+    - libmicrohttpd-dev
+    - libcurl4-openssl-dev
+  coverity_scan:
+    project:
+      name: "armadito/armadito-mod-yara"
+      description: "Build submitted via Travis CI"
+    notification_email: vhamon@teclib.com
+    build_command_prepend: "./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig; make clean"
+    build_command:   "make -j 4"
+    branch_pattern: coverity_scan
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "cTL+sHRkWOIRrWkfhYtb27XBK6BWuKb++YA/oxc3HSja6geuAIV33Ud/QdbvGk+6UKoPjW/Bmxm8JgT/Bc039fVo5vf6KXHtONMS1Sk8jac70bbGRdTwGxRhQOXbN8gWzVLRBH2DmXLl/oB25VZ3s+leKgKerPK3AuYJfzFlUyIb7hvWxyoJQgXZsJIqrIgArVQxVAU2sxFaPxlp4IYxNGBmwULeu8btGHX7YNkRRajArkjCj5NvMvqhm0wLZFCeOjaVu2zyX+fehtO2H4+S3B4ACofuaswiAbwJvk8+Byy8dMK6wqIAiCgCu1Ga7GbxhPEhRdve+RCk6v/CiIvafhK0GIoaM55WRjkW/jNPWExbtaNBcdN67I+7PJcX4EtEDAKaiPDDFu5qahfZfq40iVMKhGtHMm9smGwzR1USZKdFAyRKDFkkzcGvoYQ2jkMa5pNUQH63T7aWwWWCCbvmCtXt2z7YMLOeHcQ5vqZMKUkB6QiTMGne7VjItxej5Ot19ns7JMd22is2ih47f0CfzzZ0/PFbBRg0HBpGdYnAS4PBZCgOwWBYcZ/X/CZCc5cwK564z+OVlJK2DmGq38P4t+MlW1n+KU1LqNCjFbEsNb/hQGVsJAai8p7bIzFE2umxKNXmbHFrpqLg+6P/8me/1RyuJ+D2whd4q02dAG4ECzQ="
+
+before_install:
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+compiler:
+  - gcc
+
+before_script:
+  - git clone git://github.com/armadito/armadito-av -b DEV
+  - cd armadito-av/core
+  - ./autogen.sh
+  - mkdir -p /home/travis/build/armadito-core
+  - ./configure --prefix=/home/travis/build/armadito-core
+  - make
+  - make install
+  - cd /home/travis/build/armadito/armadito-mod-yara
+  - ./autogen.sh
+
+script:
+  ./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig && make clean && make && make check
