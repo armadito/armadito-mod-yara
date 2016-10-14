@@ -12,6 +12,7 @@ addons:
     - libjson-c-dev
     - libmicrohttpd-dev
     - libcurl4-openssl-dev
+    - libyara-dev
   coverity_scan:
     project:
       name: "armadito/armadito-mod-yara"
