@@ -1,7 +1,6 @@
 language: C
 sudo: required
 dist: trusty
-
 addons:
   apt:
     packages:
@@ -9,41 +8,48 @@ addons:
     - libglib2.0-dev
     - libmagic-dev
     - libxml2-dev
-    - libjson-c-dev
     - libmicrohttpd-dev
     - libcurl4-openssl-dev
+    - libjansson-dev
+    - libjansson4
+    - autoconf-archive
     - libyara-dev
   coverity_scan:
     project:
-      name: "armadito/armadito-mod-yara"
-      description: "Build submitted via Travis CI"
+      name: armadito/armadito-mod-yara
+      description: Build submitted via Travis CI
     notification_email: vhamon@teclib.com
-    build_command_prepend: "./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig; make clean"
-    build_command:   "make -j 4"
+    build_command_prepend: "./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig;
+      make clean"
+    build_command: make -j 4
     branch_pattern: coverity_scan
-
+deploy:
+  skip_cleanup: true
+  provider: launchpad
+  slug: "~armadito/armadito-mod-yara/+git/main"
+  oauth_token:
+    secure: OKZ4VNgiJq2F3Gba7q5fyfuTifO3nwKT2fqOyfAc8sVdPYnTAzu1sTTeUFrc81uy2802a4MWST/UAal7OHVsDEi1K5LF98rrC3U/P5oPYJ55HhbQWE6wwhb8XNnRjmM5K6b77EnIi4M9VF5ySAOmbZCkjoc9a07NvugLcoSWJngak8J581Qyfs0Tp6Bk9Yo7X6i5oasLayK1c1xXpGWI1kvpTWDAw0xHbW2xmZ7y2fZb62RbhdORBC189MyAjriDBkvSnokr2lrtBLmGc2HYraXdM6P0ODgDnBMEsHF95cL2Zp+68ypv7QwgUBRiHfi3x+N1k1BH3XZ61GS47lXzcaIVKooLb50/3KXvzokw065PXcw9zABFYrl9PMnEN2iuSjvpsf1m61np0/WAJFipZKfXE3hLQtF3+WgmNocMPpRt4jHxaoGcMO8yvlNf6aN+ppnh9+AU7npettofr97Ex9+1D9SIPdPkkt5ufyK95IyrZRChS4BULbXFfXnXTNEuDmFyxuopvrynPWjPI28mYNyW040AvbF7q++9W3ZenVh8tcD+sSogVEb8ZEBtqs6vRFPeT+ztsODCpTsH8HTp4JI2bf9AlNHWzLiDM8SkPhr+WoXdr/PIjEoCUifbmYlKnrqqAdt382d9wVemSDHIirnuhS+cfO1DW2IGaCkfuGs=
+  oauth_token_secret:
+    secure: ObKfSBV++6+fXVEhVjxOxin783UJXUDB0MYWUdjWRsAAmVBN20qwwoO6Ynhx7nhY0z3IxCALxkYX0Vj0L6A7Y0pD/FOUa+8m/MrqpQBKOMn1rAojvtFetHjhSxYoT21RMMzHGskf+Qv1pES2oc0xhy1x2CqOX/NDNzT5x4T/OEAdISkAW79I0nHoDKtAIuoGbIlmIV9LTcu/JgdjE9RK6bLUI4qRq75O9paDQ3gOZJmkMH6dG9KjbJ6EqyCX1lLCKWyHaUMosyAqnK8uQENECTQB3uf38FaNqt+rCJofeTwrCc7TX5/7dOjl27nFk88UGFDUaZLYmbS9rtBHDRwys+o1fNsVEf2hX+t5O/ejphzNlmgqQY2K/HrGWdRdGqbcbz9GWZaUOkaF/L2CerROK2/7MymBm/GUlgSzAgmxHpMXAyT2H4gxCAGAny19gPjytYnMpFLXJFYjh8VpVfPr+JCyPBeoPvW7RTjYAa19lsStsUKk3y1GxI315kOSbvu0VReB0FPBKhrUCK25NYGdaFIc3m/3G/mvdJoxsT7VSIr0NAoboe70OEopTT8T4QdM9NXsqRcJW+Imr+R3TA/tN+whxAAGqeYZFs8OwuiR1dnm6EerfCmf50+pNXucBstRe8paZvn92MvxtfqYD9VspDp4gVuXOgoY07g2p1syfM4=
+  on:
+    tags: true
 env:
   global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "cTL+sHRkWOIRrWkfhYtb27XBK6BWuKb++YA/oxc3HSja6geuAIV33Ud/QdbvGk+6UKoPjW/Bmxm8JgT/Bc039fVo5vf6KXHtONMS1Sk8jac70bbGRdTwGxRhQOXbN8gWzVLRBH2DmXLl/oB25VZ3s+leKgKerPK3AuYJfzFlUyIb7hvWxyoJQgXZsJIqrIgArVQxVAU2sxFaPxlp4IYxNGBmwULeu8btGHX7YNkRRajArkjCj5NvMvqhm0wLZFCeOjaVu2zyX+fehtO2H4+S3B4ACofuaswiAbwJvk8+Byy8dMK6wqIAiCgCu1Ga7GbxhPEhRdve+RCk6v/CiIvafhK0GIoaM55WRjkW/jNPWExbtaNBcdN67I+7PJcX4EtEDAKaiPDDFu5qahfZfq40iVMKhGtHMm9smGwzR1USZKdFAyRKDFkkzcGvoYQ2jkMa5pNUQH63T7aWwWWCCbvmCtXt2z7YMLOeHcQ5vqZMKUkB6QiTMGne7VjItxej5Ot19ns7JMd22is2ih47f0CfzzZ0/PFbBRg0HBpGdYnAS4PBZCgOwWBYcZ/X/CZCc5cwK564z+OVlJK2DmGq38P4t+MlW1n+KU1LqNCjFbEsNb/hQGVsJAai8p7bIzFE2umxKNXmbHFrpqLg+6P/8me/1RyuJ+D2whd4q02dAG4ECzQ="
-
+  - secure: cTL+sHRkWOIRrWkfhYtb27XBK6BWuKb++YA/oxc3HSja6geuAIV33Ud/QdbvGk+6UKoPjW/Bmxm8JgT/Bc039fVo5vf6KXHtONMS1Sk8jac70bbGRdTwGxRhQOXbN8gWzVLRBH2DmXLl/oB25VZ3s+leKgKerPK3AuYJfzFlUyIb7hvWxyoJQgXZsJIqrIgArVQxVAU2sxFaPxlp4IYxNGBmwULeu8btGHX7YNkRRajArkjCj5NvMvqhm0wLZFCeOjaVu2zyX+fehtO2H4+S3B4ACofuaswiAbwJvk8+Byy8dMK6wqIAiCgCu1Ga7GbxhPEhRdve+RCk6v/CiIvafhK0GIoaM55WRjkW/jNPWExbtaNBcdN67I+7PJcX4EtEDAKaiPDDFu5qahfZfq40iVMKhGtHMm9smGwzR1USZKdFAyRKDFkkzcGvoYQ2jkMa5pNUQH63T7aWwWWCCbvmCtXt2z7YMLOeHcQ5vqZMKUkB6QiTMGne7VjItxej5Ot19ns7JMd22is2ih47f0CfzzZ0/PFbBRg0HBpGdYnAS4PBZCgOwWBYcZ/X/CZCc5cwK564z+OVlJK2DmGq38P4t+MlW1n+KU1LqNCjFbEsNb/hQGVsJAai8p7bIzFE2umxKNXmbHFrpqLg+6P/8me/1RyuJ+D2whd4q02dAG4ECzQ=
 before_install:
-  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-
+- echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END
+  CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 compiler:
-  - gcc
-
+- gcc
 before_script:
-  - git clone git://github.com/armadito/armadito-av -b DEV
-  - cd armadito-av/
-  - ./autogen.sh
-  - mkdir -p /home/travis/build/armadito-core
-  - ./configure --prefix=/home/travis/build/armadito-core
-  - make
-  - make install
-  - cd /home/travis/build/armadito/armadito-mod-yara
-  - ./autogen.sh
-
-script:
-  ./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig && make clean && make && make check
+- git clone git://github.com/armadito/armadito-av -b DEV
+- cd armadito-av/
+- "./autogen.sh"
+- mkdir -p /home/travis/build/armadito-core
+- "./configure --prefix=/home/travis/build/armadito-core"
+- make
+- make install
+- cd /home/travis/build/armadito/armadito-mod-yara
+- "./autogen.sh"
+script: "./configure PKG_CONFIG_PATH=/home/travis/build/armadito-core/lib/pkgconfig
+  && make clean && make && make check"
