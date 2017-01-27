@@ -134,10 +134,6 @@ static int yara_scan_callback(int message, void *message_data, void* user_data)
 		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_DEBUG, "YARA needs to import %s module",
 			((YR_MODULE_IMPORT *)message_data)->module_name);
 		return CALLBACK_CONTINUE;
-	case CALLBACK_MSG_MODULE_IMPORTED:
-		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_INFO, "YARA imported %s module",
-			((YR_OBJECT *)message_data)->identifier);
-		return CALLBACK_CONTINUE;
 	}
 
 	return CALLBACK_ERROR;
@@ -200,6 +196,7 @@ static enum a6o_mod_status yara_close(struct a6o_module *module)
 
 	if (yr_data->rules != NULL)
 		yr_rules_destroy(yr_data->rules);
+
 
 	return A6O_MOD_OK;
 }
