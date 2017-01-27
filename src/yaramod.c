@@ -19,7 +19,7 @@ along with Armadito module YARA.  If not, see <http://www.gnu.org/licenses/>.
 
 ***/
 
-#include <libarmadito.h>
+#include <libarmadito/armadito.h>
 #include <yara.h>
 
 /*
@@ -40,8 +40,8 @@ static enum a6o_mod_status yara_init(struct a6o_module *module)
 	int ret;
 
 	if ((ret = yr_initialize()) != ERROR_SUCCESS) {
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA initialization failed: %d", ret);
-		return ARMADITO_MOD_INIT_ERROR;
+		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_WARNING, "YARA initialization failed: %d", ret);
+		return A6O_MOD_INIT_ERROR;
 	}
 
 	yr_data = malloc(sizeof(struct yara_data));
@@ -50,7 +50,7 @@ static enum a6o_mod_status yara_init(struct a6o_module *module)
 	yr_data->rule_file = NULL;
 	yr_data->rules = NULL;
 
-	return ARMADITO_MOD_OK;
+	return A6O_MOD_OK;
 }
 
 static enum a6o_mod_status yara_conf_set_rule_file(struct a6o_module *module, const char *key, struct a6o_conf_value *value)
@@ -59,7 +59,7 @@ static enum a6o_mod_status yara_conf_set_rule_file(struct a6o_module *module, co
 
 	yr_data->rule_file = strdup(a6o_conf_value_get_string(value));
 
-	return ARMADITO_MOD_OK;
+	return A6O_MOD_OK;
 }
 
 static size_t yara_count_rules(YR_RULES *rules)
@@ -101,14 +101,14 @@ static enum a6o_mod_status yara_post_init(struct a6o_module *module)
 			break;
 		}
 
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "YARA rules load from %s failed: %s", yr_data->rule_file, error);
-		return ARMADITO_MOD_INIT_ERROR;
+		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_WARNING, "YARA rules load from %s failed: %s", yr_data->rule_file, error);
+		return A6O_MOD_INIT_ERROR;
 	}
 
-	a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_INFO, "YARA rules loaded from %s, %d rules",
+	a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_INFO, "YARA rules loaded from %s, %d rules",
 		yr_data->rule_file, yara_count_rules(yr_data->rules));
 
-	return ARMADITO_MOD_OK;
+	return A6O_MOD_OK;
 }
 
 struct yara_scan_data {
@@ -123,7 +123,7 @@ static int yara_scan_callback(int message, void *message_data, void* user_data)
 
 	switch(message) {
 	case CALLBACK_MSG_RULE_MATCHING:
-		scan_data->status = ARMADITO_MALWARE;
+		scan_data->status = A6O_FILE_MALWARE;
 		scan_data->report = strdup(rule->identifier);
 		return CALLBACK_CONTINUE;
 	case CALLBACK_MSG_RULE_NOT_MATCHING:
@@ -131,11 +131,11 @@ static int yara_scan_callback(int message, void *message_data, void* user_data)
 	case CALLBACK_MSG_SCAN_FINISHED:
 		return CALLBACK_CONTINUE;
 	case CALLBACK_MSG_IMPORT_MODULE:
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_DEBUG, "YARA needs to import %s module",
+		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_DEBUG, "YARA needs to import %s module",
 			((YR_MODULE_IMPORT *)message_data)->module_name);
 		return CALLBACK_CONTINUE;
 	case CALLBACK_MSG_MODULE_IMPORTED:
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_INFO, "YARA imported %s module",
+		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_INFO, "YARA imported %s module",
 			((YR_OBJECT *)message_data)->identifier);
 		return CALLBACK_CONTINUE;
 	}
@@ -152,7 +152,7 @@ static enum a6o_file_status yara_scan(struct a6o_module *module, int fd, const c
 
 	flags |= SCAN_FLAGS_FAST_MODE;
 
-	scan_data.status = ARMADITO_CLEAN;
+	scan_data.status = A6O_FILE_CLEAN;
 	scan_data.report = NULL;
 
 // File descriptor scan support in Yara is correct for us since 3.5.0
@@ -185,7 +185,7 @@ static enum a6o_file_status yara_scan(struct a6o_module *module, int fd, const c
 			break;
 		}
 
-		a6o_log(ARMADITO_LOG_MODULE, ARMADITO_LOG_LEVEL_WARNING, "Scan failure on %s ! %s", path, error);
+		a6o_log(A6O_LOG_MODULE, A6O_LOG_LEVEL_WARNING, "Scan failure on %s ! %s", path, error);
 	}
 
 	if (scan_data.report != NULL)
@@ -201,12 +201,12 @@ static enum a6o_mod_status yara_close(struct a6o_module *module)
 	if (yr_data->rules != NULL)
 		yr_rules_destroy(yr_data->rules);
 
-	return ARMADITO_MOD_OK;
+	return A6O_MOD_OK;
 }
 
 static enum a6o_update_status yara_info(struct a6o_module *module, struct a6o_module_info *info)
 {
-	return ARMADITO_UPDATE_NON_AVAILABLE;
+	return A6O_UPDATE_NON_AVAILABLE;
 }
 
 static struct a6o_conf_entry yara_conf_table[] = {
