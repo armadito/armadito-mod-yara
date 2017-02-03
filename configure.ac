@@ -1,4 +1,4 @@
-AC_INIT(armadito-mod-clamav, 0.10.1, fdechelle@teclib.com)
+AC_INIT(armadito-mod-yara, 0.11.0, fdechelle@teclib.com)
 AM_INIT_AUTOMAKE([foreign])
 
 # collect arguments
