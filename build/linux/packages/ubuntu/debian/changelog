@@ -1,12 +1,12 @@
-armadito-mod-yara (0.11.0.0) UNRELEASED; urgency=medium
+armadito-mod-yara (0.11.0.1) UNRELEASED; urgency=medium
 
   * Update module according to new upstream version of libarmadito
-  - Remove deprecated message value CALLBACK_MSG_IMPORTED
+  * Remove deprecated message value CALLBACK_MSG_IMPORTED
 
- -- Ulrich Fausther <ufausther@teclib.com> Thu, 02 Feb 2017 10:47:13 +0100
+ -- Ulrich Fausther <ufausther@teclib.com>  Thu, 02 Feb 2017 10:47:13 +0100
 
 
-armadito-mod-yara (0.10.0-0ubuntu1) wily; urgency=medium
+armadito-mod-yara (0.10.0-0ubuntu1) xenial; urgency=medium
 
   * Initial release
 
