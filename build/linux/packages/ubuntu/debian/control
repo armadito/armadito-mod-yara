@@ -3,12 +3,12 @@ Section: utils
 Priority: optional
 Maintainer: François Déchelle <fdechelle@teclib.com>
 Standards-Version: 3.9.2
-Build-Depends: debhelper (>= 9), autotools-dev, libarmadito-dev (>= 0.10.0), dh-autoreconf
+Build-Depends: debhelper (>= 9), autotools-dev, libarmadito-dev (>= 0.10.0), libyara-dev, dh-autoreconf
 
 Package: armadito-mod-yara
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libarmadito (>= 0.10.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libarmadito (>= 0.10.0), libyara-dev 
 Description: Armadito antivirus - YARA module
  Provides Armadito YARA scan module
 
